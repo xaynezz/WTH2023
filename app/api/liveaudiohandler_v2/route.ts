@@ -1,8 +1,31 @@
 import axios from 'axios'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { HfInference } from '@huggingface/inference'
+import { removeNewlines } from '@/lib/string'
+const { ocrSpace } = require('ocr-space-api-wrapper')
 
 // Convert the Base64 image to a Blob
+function base64ToBlob(base64Data: any, contentType: any) {
+  contentType = contentType || ''
+  var sliceSize = 1024
+  var byteCharacters = atob(base64Data)
+  var byteArrays = []
+
+  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    var slice = byteCharacters.slice(offset, offset + sliceSize)
+
+    var byteNumbers = new Array(slice.length)
+    for (var i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i)
+    }
+
+    var byteArray = new Uint8Array(byteNumbers)
+    byteArrays.push(byteArray)
+  }
+
+  return new Blob(byteArrays, { type: contentType })
+}
 
 export async function POST(request: Request) {
   const { images, flag } = await request.json()
@@ -12,11 +35,12 @@ export async function POST(request: Request) {
       console.log('flag 0 -> What is written here')
       try {
         const image = images[0]
-        const response = await axios.post('/api/ocr', {
-          image,
-        })
+        const res1 = await ocrSpace(image, { apiKey: process.env.OCR_KEY })
+        const processedDataWithoutSlashN = removeNewlines(
+          res1.ParsedResults[0].ParsedText,
+        )
         return NextResponse.json({
-          data: response.data.data,
+          data: processedDataWithoutSlashN,
         })
       } catch (error) {
         console.error('Error making POST request:', error)
@@ -29,10 +53,15 @@ export async function POST(request: Request) {
         // Fixed loop condition
         const image = images[i]
         try {
-          const response = await axios.post('/api/imgr', {
-            image,
+          const strippedHeader = image.split(',')[1]
+          var blob = base64ToBlob(strippedHeader, 'image/jpeg')
+
+          const inference = new HfInference(process.env.HF_TOKEN)
+          const response = await inference.imageToText({
+            data: blob,
+            model: 'nlpconnect/vit-gpt2-image-captioning',
           })
-          stringAboutEnvironment += response.data.short_description
+          stringAboutEnvironment += response.generated_text
         } catch (error) {
           console.error('Error making POST request:', error)
           throw error // or handle the error as you see fit
