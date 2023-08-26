@@ -12,12 +12,12 @@ export async function POST(request: Request) {
       console.log('flag 0 -> What is written here')
       try {
         const image = images[0]
-        const response = await axios.post('http://localhost:3000/api/ocr', {
+        const response = await axios.post('/api/ocr', {
           image,
         })
         return NextResponse.json({
           data: response.data.data,
-        }) 
+        })
       } catch (error) {
         console.error('Error making POST request:', error)
         throw error // or handle the error as you see fit
@@ -29,16 +29,14 @@ export async function POST(request: Request) {
         // Fixed loop condition
         const image = images[i]
         try {
-          const response = await axios.post('http://localhost:3000/api/imgr', {
+          const response = await axios.post('/api/imgr', {
             image,
           })
           stringAboutEnvironment += response.data.short_description
-          
         } catch (error) {
           console.error('Error making POST request:', error)
           throw error // or handle the error as you see fit
         }
-
       }
 
       try {
