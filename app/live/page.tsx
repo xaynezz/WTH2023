@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useEffect, useState } from 'react'
 import Webcam from 'react-webcam'
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 const videoConstraints = {
   width: 1280,
   height: 720,
@@ -12,9 +12,9 @@ import { useSpeechRecognition } from 'react-speech-kit'
 
 export default function Live() {
   const commands = [
-    'What is written here',
+    'what is written here',
     'describe to me the surrounding',
-    'What is in-front of me',
+    'what is in front of me',
   ]
   const [text, setText] = useState('')
   let images: any[] = []
@@ -43,16 +43,16 @@ export default function Live() {
   const { listen } = useSpeechRecognition({
     onResult: (result: any) => {
       setText(result)
-      return
     },
   })
 
   useEffect(() => {
-    listen()
-  }, [])
-
-  useEffect(() => {
-    if (commands.some((command) => command.includes(text))) {
+    console.log(text)
+    if (
+      commands.some((command) =>
+        text.toLowerCase().includes(command.toLowerCase()),
+      )
+    ) {
       handleSubmitText()
       setText('')
     }
@@ -68,13 +68,14 @@ export default function Live() {
       if (images.length >= 5) {
         images = [...images.slice(1), image]
       } else {
-        return [...images, image]
+        images.push(image)
       }
     }, 5000)
   }
 
   useEffect(() => {
     startSnapshot()
+    listen()
   }, [])
 
   return (
