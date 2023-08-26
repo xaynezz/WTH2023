@@ -2,13 +2,15 @@
 import { useRef, useEffect, useState } from 'react'
 import Webcam from 'react-webcam'
 import axios from 'axios'
+// @ts-ignore
+import { useSpeechRecognition } from 'react-speech-kit'
+
 const videoConstraints = {
   width: 1280,
   height: 720,
-  facingMode: 'user',
+  facingMode:
+    process.env.NODE_ENV === 'development' ? 'user' : { exact: 'environment' },
 }
-// @ts-ignore
-import { useSpeechRecognition } from 'react-speech-kit'
 
 export default function Live() {
   const commands = [
