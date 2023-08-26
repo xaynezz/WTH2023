@@ -27,7 +27,8 @@ export async function POST(request: Request) {
   // Convert Base64 image to Blob
   const { image } = await request.json()
   const strippedHeader = image.split(',')[1]
-
+  console.log("other api")
+  console.log(image)
   var blob = base64ToBlob(strippedHeader, 'image/jpeg')
 
   const inference = new HfInference(process.env.HF_TOKEN)
