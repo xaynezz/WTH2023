@@ -2,6 +2,7 @@
 import Webcam from 'react-webcam'
 import React, { useState, useRef, useEffect } from 'react'
 import axios, { AxiosError } from 'axios'
+import Image from 'next/image'
 
 const videoConstraints = {
   width: 1280,
@@ -13,14 +14,6 @@ const videoConstraints = {
 export default function OCR() {
   const webcamRef = useRef<Webcam>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [announcement, setAnnouncement] = useState('')
-
-  useEffect(() => {
-    if (announcement) {
-      const utterance = new SpeechSynthesisUtterance(announcement)
-      speechSynthesis.speak(utterance)
-    }
-  }, [announcement])
 
   const capture = React.useCallback(async () => {
     setIsLoading(true)
@@ -29,10 +22,14 @@ export default function OCR() {
       const response = await axios.post('/api/imgr', {
         image,
       })
-      setAnnouncement(response?.data?.short_description)
+      const utterance = new SpeechSynthesisUtterance(response.data?.data)
+      speechSynthesis.speak(utterance)
     } catch (e) {
       if (e instanceof AxiosError) {
-        setAnnouncement('Picture was not clear, please try again')
+        const utterance = new SpeechSynthesisUtterance(
+          'Something went wrong. Please try again.',
+        )
+        speechSynthesis.speak(utterance)
         console.error(e)
       }
     }
@@ -41,7 +38,7 @@ export default function OCR() {
   return (
     <div className="h-full w-full flex justify-center items-center flex-col">
       {isLoading ? (
-        <div>Loading...</div>
+        <Image src={'/Loading.svg'} alt="Loading..." width={100} height={100} />
       ) : (
         <Webcam
           ref={webcamRef}
