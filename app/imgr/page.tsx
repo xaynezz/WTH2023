@@ -27,7 +27,7 @@ export default function OCR() {
     }
   }, [webcamRef])
   return (
-    <div className="h-screen w-screen flex justify-center items-center flex-col">
+    <div className="h-full w-full flex justify-center items-center flex-col">
       <Webcam
         ref={webcamRef}
         audio={false}

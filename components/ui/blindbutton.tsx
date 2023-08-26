@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from './button'
 
 interface BlindButtonProps {
@@ -9,22 +9,22 @@ interface BlindButtonProps {
 }
 
 export default function BlindButton(props: BlindButtonProps) {
-  const [clickCount, setClickCount] = useState(0)
+  const clickCountRef = useRef(0)
 
   const handleButtonClick = () => {
-    setClickCount((prevCount) => prevCount + 1)
+    clickCountRef.current = clickCountRef.current + 1
     setTimeout(() => {
-      if (clickCount === 0) {
+      if (clickCountRef.current === 1) {
         props.callBack()
         console.log('Single click')
-      } else if (clickCount === 1) {
+      } else if (clickCountRef.current === 2) {
         const announcement = new SpeechSynthesisUtterance(
           props.audioDescription,
         )
         window.speechSynthesis.speak(announcement)
         console.log('Double click')
       }
-      setClickCount(0)
+      clickCountRef.current = 0
     }, 300)
   }
 
