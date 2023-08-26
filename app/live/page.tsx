@@ -75,6 +75,8 @@ export default function Live() {
   const startSnapshot = () => {
     setInterval(() => {
       const image = webcamRef?.current?.getScreenshot()
+      if (!image) return
+
       setImages((prevImages) => {
         if (prevImages.length >= 5) {
           const updatedImages = [...prevImages.slice(1), image]
