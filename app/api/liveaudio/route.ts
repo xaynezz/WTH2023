@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const arrayOfsubString = ["what is written here", "describe to me the surrounding", "what is in-front of me"]
     var found = -1
     var i = 0
-    console.log(arrOfCache)
+   
     while (i < arrayOfsubString.length) {
         var currentString = arrayOfsubString[i];
         const indexOfFirstMatch = concatenatedString.search(currentString)
