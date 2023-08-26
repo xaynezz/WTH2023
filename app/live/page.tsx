@@ -17,7 +17,7 @@ export default function Live() {
     'what is in front of me',
   ]
   const [text, setText] = useState('')
-  let images: any[] = []
+  const [images, setImages] = useState<any[]>([])
   const handleSubmitText = async () => {
     const response = await axios.post('/api/liveaudio', {
       data: text,
@@ -31,12 +31,10 @@ export default function Live() {
     if (flag !== -1) {
       const response = await axios.post('/api/liveaudiohandler_v2', {
         images,
+        flag,
       })
-      const flag = response?.data?.flag
-      if (flag !== -1) {
-        const utterance = new SpeechSynthesisUtterance(response?.data?.data)
-        speechSynthesis.speak(utterance)
-      }
+      const utterance = new SpeechSynthesisUtterance(response?.data?.data)
+      speechSynthesis.speak(utterance)
     }
   }
 
@@ -54,7 +52,6 @@ export default function Live() {
       )
     ) {
       handleSubmitText()
-      setText('')
     }
   }, [text])
 
@@ -66,16 +63,20 @@ export default function Live() {
       if (!image) return
 
       if (images.length >= 5) {
-        images = [...images.slice(1), image]
+        const updatedImages = [...images.slice(1), image]
+        setImages(updatedImages)
       } else {
-        images.push(image)
+        setImages([...images, image])
       }
-    }, 5000)
+    }, 1000)
   }
 
   useEffect(() => {
     startSnapshot()
-    listen()
+
+    setTimeout(() => {
+      listen()
+    }, 1000)
   }, [])
 
   return (
