@@ -24,19 +24,15 @@ function base64ToBlob(base64Data: any, contentType: any) {
 }
 
 export async function POST(request: Request) {
-  // Convert Base64 image to Blob
   const { image } = await request.json()
   const strippedHeader = image.split(',')[1]
-  console.log("other api")
-  console.log(image)
   var blob = base64ToBlob(strippedHeader, 'image/jpeg')
 
   const inference = new HfInference(process.env.HF_TOKEN)
   const response = await inference.imageToText({
     data: blob,
-    // model: 'Salesforce/blip-image-captioning-base',
     model: 'nlpconnect/vit-gpt2-image-captioning',
   })
 
-  return NextResponse.json({ short_description: response.generated_text })
+  return NextResponse.json({ data: response.generated_text })
 }
