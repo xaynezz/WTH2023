@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import Webcam from 'react-webcam'
 import axios, { AxiosError } from 'axios'
 const videoConstraints = {
@@ -9,6 +9,8 @@ const videoConstraints = {
 }
 
 export default function Live() {
+  const [images, setImages] = useState<string[]>([])
+  const [announcement, setAnnouncement] = useState<string>('')
   const webcamRef = useRef<Webcam>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const startRecording = () => {
@@ -34,6 +36,19 @@ export default function Live() {
                   console.error('Failed to send audio', response.data)
                 }
                 // handle gracefully
+                const flag = response?.data?.flag
+                if (flag) {
+                  const resp = await axios.post('/api/live', {
+                    images,
+                    flag,
+                  })
+
+                  if (resp.status !== 200) {
+                    console.error('Failed to send images', resp.data)
+                  }
+
+                  setAnnouncement(resp?.data?.data)
+                }
               } catch (err) {
                 console.error('Error sending audio data:', err)
               }
@@ -57,8 +72,30 @@ export default function Live() {
     }
   }
 
+  const startSnapshot = () => {
+    setInterval(() => {
+      const image = webcamRef?.current?.getScreenshot()
+      setImages((prevImages) => {
+        if (prevImages.length >= 5) {
+          const updatedImages = [...prevImages.slice(1), image]
+          return updatedImages
+        } else {
+          return [...prevImages, image]
+        }
+      })
+    }, 5000)
+  }
+
+  useEffect(() => {
+    if (announcement) {
+      const utterance = new SpeechSynthesisUtterance(announcement)
+      speechSynthesis.speak(utterance)
+    }
+  }, [announcement])
+
   useEffect(() => {
     startRecording()
+    startSnapshot()
     return () => stopRecording()
   }, [])
 
