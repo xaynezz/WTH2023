@@ -1,18 +1,18 @@
 'use client'
 import Webcam from 'react-webcam'
-import React, { useEffect } from 'react'
-import { useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import React, { useEffect, useRef, useState } from 'react'
 import axios, { AxiosError } from 'axios'
 
 const videoConstraints = {
   width: 1280,
   height: 720,
-  facingMode: { exact: 'environment' },
+  facingMode:
+    process.env.NODE_ENV === 'development' ? 'user' : { exact: 'environment' },
 }
 
 export default function OCR() {
   const webcamRef = useRef<Webcam>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [announcement, setAnnouncement] = useState('')
 
   useEffect(() => {
@@ -23,6 +23,7 @@ export default function OCR() {
   }, [announcement])
 
   const capture = React.useCallback(async () => {
+    setIsLoading(true)
     const image = webcamRef?.current?.getScreenshot()
     try {
       const response = await axios.post('/api/ocr', {
@@ -31,19 +32,25 @@ export default function OCR() {
       setAnnouncement(response?.data?.data)
     } catch (e) {
       if (e instanceof AxiosError) {
+        setAnnouncement('Picture was not clear, please try again')
         console.error(e)
       }
     }
+    setIsLoading(false)
   }, [webcamRef])
   return (
     <div className="h-screen w-screen flex justify-center items-center flex-col">
-      <Webcam
-        ref={webcamRef}
-        audio={false}
-        screenshotFormat="image/jpeg"
-        videoConstraints={videoConstraints}
-        onClick={capture}
-      />
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
+        <Webcam
+          ref={webcamRef}
+          audio={false}
+          screenshotFormat="image/jpeg"
+          videoConstraints={videoConstraints}
+          onClick={capture}
+        />
+      )}
     </div>
   )
 }
