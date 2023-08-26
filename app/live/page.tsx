@@ -19,8 +19,8 @@ export default function Live() {
   const [text, setText] = useState('')
   let images: any[] = []
   const handleSubmitText = async () => {
-    const response = await axios.post('/liveaudio', {
-      text,
+    const response = await axios.post('/api/liveaudio', {
+      data: text,
     })
 
     if (response?.status !== 200) {
