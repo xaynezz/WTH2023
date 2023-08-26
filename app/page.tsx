@@ -1,59 +1,36 @@
 'use client'
-import { useRef, useEffect, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
+import BlindButton from '@/components/ui/blindbutton'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [socket, setSocket] = useState<Socket | null>(null)
-
-  useEffect(() => {
-    const socketInstance = io('http://localhost:3001')
-    setSocket(socketInstance)
-
-    socketInstance.on('serverResponse', (data: any) => {
-      console.log('Received response from server:', data)
-      // Handle the received data as needed
-    })
-
-    return () => {
-      socketInstance.disconnect()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (socket && videoRef.current) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          videoRef.current!.srcObject = stream
-          videoRef.current!.play()
-
-          const canvas = document.createElement('canvas')
-          const context = canvas.getContext('2d')
-
-          const captureFrame = () => {
-            context!.drawImage(
-              videoRef.current!,
-              0,
-              0,
-              canvas.width,
-              canvas.height,
-            )
-            const frame = canvas.toDataURL('image/jpeg')
-            socket.emit('videoFrame', frame)
-          }
-
-          const interval = setInterval(captureFrame, 100)
-          return () => clearInterval(interval)
-        })
-        .catch((err) => {
-          console.error('Error accessing the camera', err)
-        })
-    }
-  }, [socket])
+  const router = useRouter()
   return (
-    <div className="h-screen w-screen flex justify-center items-center">
-      <video ref={videoRef} width="400" height="300" muted></video>
+    <div className="h-full w-full flex flex-col justify-center items-center">
+      <div className="flex h-1/2 w-full">
+        <BlindButton
+          text="Describe Scene"
+          audioDescription="Describe Scene"
+          className="border-black border-4 border-r-0 border-b-0 w-1/2 h-full bg-neutral-400 text-4xl font-semibold text-black hover:bg-slate-600"
+          callBack={() => {
+            router.push('/imgr')
+          }}
+        />
+        <BlindButton
+          text="Describe Object"
+          audioDescription="Describe Object"
+          className="border-black border-4 w-1/2 border-b-0 h-full bg-neutral-400 text-4xl font-semibold text-black hover:bg-slate-600"
+          callBack={() => {
+            router.push('ocr')
+          }}
+        />
+      </div>
+      <BlindButton
+        text="Live Feed"
+        audioDescription="Live Feed"
+        className="border-black border-4 w-full h-[40%] bg-neutral-200 text-4xl font-semibold text-black hover:bg-slate-600"
+        callBack={() => {}}
+      />
+      <h1 className="text-blue-400 font-semibold text-4xl">My Dog</h1>
     </div>
   )
 }
