@@ -1,7 +1,6 @@
 'use client'
 import Webcam from 'react-webcam'
-import React from 'react'
-import { useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import axios, { AxiosError } from 'axios'
 
@@ -13,13 +12,22 @@ const videoConstraints = {
 
 export default function OCR() {
   const webcamRef = useRef<Webcam>(null)
+  const [announcement, setAnnouncement] = useState('')
+
+  useEffect(() => {
+    if (announcement) {
+      const utterance = new SpeechSynthesisUtterance(announcement)
+      speechSynthesis.speak(utterance)
+    }
+  }, [announcement])
+
   const capture = React.useCallback(async () => {
     const image = webcamRef?.current?.getScreenshot()
     try {
-      const response = await axios.post('/dummyapi/ocr', {
+      const response = await axios.post('/api/imgr', {
         image,
       })
-      console.log(response)
+      setAnnouncement(response?.data?.short_description)
     } catch (e) {
       if (e instanceof AxiosError) {
         console.error(e)
