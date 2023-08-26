@@ -33,9 +33,8 @@ export async function POST(request: Request) {
   const inference = new HfInference(process.env.HF_TOKEN)
   const response = await inference.imageToText({
     data: blob,
-    // model: 'Salesforce/blip-image-captioning-base',
     model: 'nlpconnect/vit-gpt2-image-captioning',
   })
 
-  return NextResponse.json({ short_description: response.generated_text })
+  return NextResponse.json({ data: response.generated_text })
 }
