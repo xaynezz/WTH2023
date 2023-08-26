@@ -34,5 +34,5 @@ export async function POST(request: Request) {
     model: 'nlpconnect/vit-gpt2-image-captioning',
   })
 
-  return NextResponse.json({ short_description: response.generated_text })
+  return NextResponse.json({ data: response.generated_text })
 }
