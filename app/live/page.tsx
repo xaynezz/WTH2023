@@ -7,111 +7,74 @@ const videoConstraints = {
   height: 720,
   facingMode: 'user',
 }
+// @ts-ignore
+import { useSpeechRecognition } from 'react-speech-kit'
 
 export default function Live() {
-  const [images, setImages] = useState<string[]>([])
-  const [flag, setFlag] = useState<number>(-1)
-  const [announcement, setAnnouncement] = useState<string>('')
-  const webcamRef = useRef<Webcam>(null)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const startRecording = () => {
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        const mediaRecorder = new MediaRecorder(stream)
-        mediaRecorderRef.current = mediaRecorder
+  const commands = [
+    'What is written here',
+    'describe to me the surrounding',
+    'What is in-front of me',
+  ]
+  const [text, setText] = useState('')
+  let images: any[] = []
+  const handleSubmitText = async () => {
+    const response = await axios.post('/liveaudio', {
+      text,
+    })
 
-        mediaRecorder.ondataavailable = async (event) => {
-          if (event.data.size > 0) {
-            const reader = new FileReader()
-            reader.readAsDataURL(event.data)
-            reader.onloadend = async () => {
-              const base64Audio = reader.result as string
+    if (response?.status !== 200) {
+      console.error('Failed to send text', response?.data)
+    }
 
-              try {
-                const response = await axios.post('/dummyapi/live', {
-                  audio: base64Audio,
-                })
-
-                if (response.status !== 200) {
-                  console.error('Failed to send audio', response.data)
-                }
-                // handle gracefully
-                const flag = response?.data?.flag
-                if (flag) setFlag(flag)
-              } catch (err) {
-                console.error('Error sending audio data:', err)
-              }
-            }
-          }
-        }
-
-        mediaRecorder.start(5000) // Capture audio chunks every 100ms
-        mediaRecorder.onstop = () => {
-          stream.getTracks().forEach((track) => track.stop())
-        }
+    const flag = response?.data?.flag
+    if (flag !== -1) {
+      const response = await axios.post('/api/liveaudiohandler_v2', {
+        images,
       })
-      .catch((err) => {
-        console.error('Error accessing the microphone', err)
-      })
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop()
+      const flag = response?.data?.flag
+      if (flag !== -1) {
+        const utterance = new SpeechSynthesisUtterance(response?.data?.data)
+        speechSynthesis.speak(utterance)
+      }
     }
   }
+
+  const { listen } = useSpeechRecognition({
+    onResult: (result: any) => {
+      setText(result)
+      return
+    },
+  })
+
+  useEffect(() => {
+    listen()
+  }, [])
+
+  useEffect(() => {
+    if (commands.some((command) => command.includes(text))) {
+      handleSubmitText()
+      setText('')
+    }
+  }, [text])
+
+  const webcamRef = useRef<Webcam>(null)
 
   const startSnapshot = () => {
     setInterval(() => {
       const image = webcamRef?.current?.getScreenshot()
       if (!image) return
 
-      setImages((prevImages) => {
-        if (prevImages.length >= 5) {
-          const updatedImages = [...prevImages.slice(1), image]
-          return updatedImages
-        } else {
-          return [...prevImages, image]
-        }
-      })
+      if (images.length >= 5) {
+        images = [...images.slice(1), image]
+      } else {
+        return [...images, image]
+      }
     }, 5000)
   }
 
   useEffect(() => {
-    async function test() {
-      if (flag !== -1) {
-        const resp = await axios.post('/api/liveaudiohandler_v2', {
-          images,
-          flag,
-        })
-
-        if (resp.status !== 200) {
-          console.error('Failed to send images', resp.data)
-        }
-
-        setAnnouncement(resp?.data?.data)
-      }
-    }
-    test()
-  }, [flag])
-
-  useEffect(() => {
-    if (announcement) {
-      const utterance = new SpeechSynthesisUtterance(announcement)
-      speechSynthesis.speak(utterance)
-    }
-    setFlag(-1)
-  }, [announcement])
-
-  useEffect(() => {
-    console.log(images)
-  }, [images])
-
-  useEffect(() => {
-    startRecording()
     startSnapshot()
-    return () => stopRecording()
   }, [])
 
   return (
