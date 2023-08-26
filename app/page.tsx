@@ -1,7 +1,9 @@
 'use client'
 import BlindButton from '@/components/ui/blindbutton'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
+  const router = useRouter()
   return (
     <div className="h-full w-full flex flex-col justify-center items-center">
       <div className="flex h-1/2 w-full">
@@ -9,13 +11,17 @@ export default function Home() {
           text="Describe Scene"
           audioDescription="Describe Scene"
           className="border-black border-4 border-r-0 border-b-0 w-1/2 h-full bg-neutral-400 text-4xl font-semibold text-black hover:bg-slate-600"
-          callBack={() => {}}
+          callBack={() => {
+            router.push('/imgr')
+          }}
         />
         <BlindButton
           text="Describe Object"
           audioDescription="Describe Object"
           className="border-black border-4 w-1/2 border-b-0 h-full bg-neutral-400 text-4xl font-semibold text-black hover:bg-slate-600"
-          callBack={() => {}}
+          callBack={() => {
+            router.push('ocr')
+          }}
         />
       </div>
       <BlindButton
