@@ -54,5 +54,5 @@ export async function POST(request: Request) {
       console.log(error)
     }
   }
-  return NextResponse.json({ hello: finalString })
+  return NextResponse.json({ data: finalString })
 }

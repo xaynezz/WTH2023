@@ -10,6 +10,7 @@ const videoConstraints = {
 
 export default function Live() {
   const [images, setImages] = useState<string[]>([])
+  const [flag, setFlag] = useState<number>(-1)
   const [announcement, setAnnouncement] = useState<string>('')
   const webcamRef = useRef<Webcam>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -37,18 +38,7 @@ export default function Live() {
                 }
                 // handle gracefully
                 const flag = response?.data?.flag
-                if (flag) {
-                  const resp = await axios.post('/api/live', {
-                    images,
-                    flag,
-                  })
-
-                  if (resp.status !== 200) {
-                    console.error('Failed to send images', resp.data)
-                  }
-
-                  setAnnouncement(resp?.data?.data)
-                }
+                if (flag) setFlag(flag)
               } catch (err) {
                 console.error('Error sending audio data:', err)
               }
@@ -56,7 +46,7 @@ export default function Live() {
           }
         }
 
-        mediaRecorder.start(100) // Capture audio chunks every 100ms
+        mediaRecorder.start(5000) // Capture audio chunks every 100ms
         mediaRecorder.onstop = () => {
           stream.getTracks().forEach((track) => track.stop())
         }
@@ -89,11 +79,34 @@ export default function Live() {
   }
 
   useEffect(() => {
+    async function test() {
+      if (flag !== -1) {
+        const resp = await axios.post('/api/liveaudiohandler_v2', {
+          images,
+          flag,
+        })
+
+        if (resp.status !== 200) {
+          console.error('Failed to send images', resp.data)
+        }
+
+        setAnnouncement(resp?.data?.data)
+      }
+    }
+    test()
+  }, [flag])
+
+  useEffect(() => {
     if (announcement) {
       const utterance = new SpeechSynthesisUtterance(announcement)
       speechSynthesis.speak(utterance)
     }
+    setFlag(-1)
   }, [announcement])
+
+  useEffect(() => {
+    console.log(images)
+  }, [images])
 
   useEffect(() => {
     startRecording()
