@@ -89,6 +89,7 @@ export default function Live() {
         screenshotFormat="image/jpeg"
         videoConstraints={videoConstraints}
       />
+      {'text: ' + text}
     </div>
   )
 }
