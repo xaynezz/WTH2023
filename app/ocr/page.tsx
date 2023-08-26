@@ -19,7 +19,7 @@ export default function OCR() {
     setIsLoading(true)
     const image = webcamRef?.current?.getScreenshot()
     try {
-      const response = await axios.post('http://localhost:3000/api/ocr', {
+      const response = await axios.post('/api/ocr', {
         image,
       })
       const utterance = new SpeechSynthesisUtterance(response.data?.data)

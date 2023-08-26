@@ -21,7 +21,7 @@ export default function Live() {
   const [text, setText] = useState('')
   const [images, setImages] = useState<any[]>([])
   const handleSubmitText = async () => {
-    const response = await axios.post('http://localhost:3000/api/liveaudio', {
+    const response = await axios.post('/api/liveaudio', {
       data: text,
     })
 
@@ -31,13 +31,10 @@ export default function Live() {
 
     const flag = response?.data?.flag
     if (flag !== -1) {
-      const response = await axios.post(
-        'http://localhost:3000/api/liveaudiohandler_v2',
-        {
-          images,
-          flag,
-        },
-      )
+      const response = await axios.post('/api/liveaudiohandler_v2', {
+        images,
+        flag,
+      })
       const utterance = new SpeechSynthesisUtterance(response?.data?.data)
       speechSynthesis.speak(utterance)
     }
