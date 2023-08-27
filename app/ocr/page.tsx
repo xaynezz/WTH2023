@@ -4,16 +4,31 @@ import React, { useEffect, useRef, useState } from 'react'
 import axios, { AxiosError } from 'axios'
 import Image from 'next/image'
 
-const videoConstraints = {
-  width: 1280,
-  height: 720,
-  facingMode:
-    process.env.NODE_ENV === 'development' ? 'user' : { exact: 'environment' },
-}
-
 export default function OCR() {
   const webcamRef = useRef<Webcam>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const clickCountRef = useRef(0)
+  const [facingMode, setFacingMode] = useState<any>(
+    process.env.NODE_ENV === 'development' ? 'user' : { exact: 'environment' },
+  )
+  const videoConstraints = {
+    width: 1280,
+    height: 720,
+    facingMode,
+  }
+
+  const handleButtonClick = () => {
+    clickCountRef.current = clickCountRef.current + 1
+    setTimeout(() => {
+      if (clickCountRef.current === 1) {
+        capture()
+      } else if (clickCountRef.current === 2) {
+        if (facingMode === 'user') setFacingMode({ exact: 'environment' })
+        else setFacingMode('user')
+      }
+      clickCountRef.current = 0
+    }, 300)
+  }
 
   const capture = React.useCallback(async () => {
     setIsLoading(true)
@@ -45,7 +60,7 @@ export default function OCR() {
           audio={false}
           screenshotFormat="image/jpeg"
           videoConstraints={videoConstraints}
-          onClick={capture}
+          onClick={handleButtonClick}
         />
       )}
     </div>
