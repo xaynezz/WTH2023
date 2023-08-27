@@ -12,6 +12,8 @@ const videoConstraints = {
 }
 
 export default function OCR() {
+  const speakRef = useRef('')
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const webcamRef = useRef<Webcam>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [text, setText] = useState('')
@@ -22,20 +24,30 @@ export default function OCR() {
       const response = await axios.post('/api/imgr', {
         image,
       })
-      const utterance = new SpeechSynthesisUtterance(response.data?.data)
-      speechSynthesis.speak(utterance)
+      speakRef.current = response.data?.data
+      buttonRef.current?.click()
+      // const utterance = new SpeechSynthesisUtterance(response.data?.data)
+      // speechSynthesis.speak(utterance)
       setText(response.data?.data)
     } catch (e) {
       if (e instanceof AxiosError) {
-        const utterance = new SpeechSynthesisUtterance(
-          'Something went wrong. Please try again.',
-        )
-        speechSynthesis.speak(utterance)
+        speakRef.current = 'Something went wrong. Please try again.'
+        buttonRef.current?.click()
+        // const utterance = new SpeechSynthesisUtterance(
+        //   'Something went wrong. Please try again.',
+        // )
+        // speechSynthesis.speak(utterance)
         console.error(e)
       }
     }
     setIsLoading(false)
   }, [webcamRef])
+
+  const speak = () => {
+    const utterance = new SpeechSynthesisUtterance(speakRef.current)
+    speechSynthesis.speak(utterance)
+  }
+
   return (
     <div className="h-full w-full flex justify-center items-center flex-col">
       {isLoading ? (
@@ -49,6 +61,7 @@ export default function OCR() {
           onClick={capture}
         />
       )}
+      <button className="invisible" onClick={speak} ref={buttonRef}></button>
       {'text ' + text}
     </div>
   )
