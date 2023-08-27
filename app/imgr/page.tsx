@@ -14,7 +14,7 @@ const videoConstraints = {
 export default function OCR() {
   const webcamRef = useRef<Webcam>(null)
   const [isLoading, setIsLoading] = useState(false)
-
+  const [text, setText] = useState('')
   const capture = React.useCallback(async () => {
     setIsLoading(true)
     const image = webcamRef?.current?.getScreenshot()
@@ -24,6 +24,7 @@ export default function OCR() {
       })
       const utterance = new SpeechSynthesisUtterance(response.data?.data)
       speechSynthesis.speak(utterance)
+      setText(response.data?.data)
     } catch (e) {
       if (e instanceof AxiosError) {
         const utterance = new SpeechSynthesisUtterance(
@@ -48,6 +49,7 @@ export default function OCR() {
           onClick={capture}
         />
       )}
+      {'text ' + text}
     </div>
   )
 }
