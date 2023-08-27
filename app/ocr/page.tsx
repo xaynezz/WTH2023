@@ -37,7 +37,10 @@ export default function OCR() {
       const response = await axios.post('/api/ocr', {
         image,
       })
-      const utterance = new SpeechSynthesisUtterance(response.data?.data)
+      const textString = response.data?.data
+      const utterance = new SpeechSynthesisUtterance(
+        textString !== '' ? textString : 'No text found',
+      )
       speechSynthesis.speak(utterance)
     } catch (e) {
       if (e instanceof AxiosError) {

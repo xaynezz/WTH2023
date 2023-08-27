@@ -4,6 +4,7 @@ import Webcam from 'react-webcam'
 import axios from 'axios'
 // @ts-ignore
 import { useSpeechRecognition } from 'react-speech-kit'
+import Image from 'next/image'
 
 export default function Live() {
   const commands = [
@@ -12,6 +13,7 @@ export default function Live() {
     'what is in front of me',
   ]
   const [text, setText] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [images, setImages] = useState<any[]>([])
   const clickCountRef = useRef(0)
   const [facingMode, setFacingMode] = useState<any>(
@@ -34,22 +36,35 @@ export default function Live() {
     }, 300)
   }
   const handleSubmitText = async () => {
-    const response = await axios.post('/api/liveaudio', {
-      data: text,
-    })
-
-    if (response?.status !== 200) {
-      console.error('Failed to send text', response?.data)
-    }
-
-    const flag = response?.data?.flag
-    if (flag !== -1) {
-      const response = await axios.post('/api/liveaudiohandler_v2', {
-        images,
-        flag,
+    try {
+      const response = await axios.post('/api/liveaudio', {
+        data: text,
       })
-      const utterance = new SpeechSynthesisUtterance(response?.data?.data)
+
+      if (response?.status !== 200) {
+        console.error('Failed to send text', response?.data)
+      }
+
+      const flag = response?.data?.flag
+      if (flag !== -1) {
+        setIsLoading(true)
+        const response = await axios.post('/api/liveaudiohandler_v2', {
+          images,
+          flag,
+        })
+        const textString = response.data?.data
+        const utterance = new SpeechSynthesisUtterance(
+          textString !== '' ? textString : 'Please speak louder',
+        )
+        speechSynthesis.speak(utterance)
+        setIsLoading(false)
+      }
+    } catch (e) {
+      const utterance = new SpeechSynthesisUtterance(
+        'Something went wrong. Please try again.',
+      )
       speechSynthesis.speak(utterance)
+      console.error(e)
     }
   }
 
@@ -96,6 +111,17 @@ export default function Live() {
 
   return (
     <div className="h-screen w-screen flex justify-center items-center">
+      {isLoading && (
+        <div className="h-full w-full absolute flex opacity-50 bg-white justify-center items-center">
+          <Image
+            src={'/Loading.svg'}
+            alt="Loading..."
+            width={100}
+            height={100}
+            className="bg-none"
+          />
+        </div>
+      )}
       <Webcam
         ref={webcamRef}
         audio={false}
