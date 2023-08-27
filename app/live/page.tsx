@@ -5,13 +5,6 @@ import axios from 'axios'
 // @ts-ignore
 import { useSpeechRecognition } from 'react-speech-kit'
 
-const videoConstraints = {
-  width: 1280,
-  height: 720,
-  facingMode:
-    process.env.NODE_ENV === 'development' ? 'user' : { exact: 'environment' },
-}
-
 export default function Live() {
   const commands = [
     'what is written here',
@@ -20,6 +13,26 @@ export default function Live() {
   ]
   const [text, setText] = useState('')
   const [images, setImages] = useState<any[]>([])
+  const clickCountRef = useRef(0)
+  const [facingMode, setFacingMode] = useState<any>(
+    process.env.NODE_ENV === 'development' ? 'user' : { exact: 'environment' },
+  )
+  const videoConstraints = {
+    width: 1280,
+    height: 720,
+    facingMode,
+  }
+
+  const handleButtonClick = () => {
+    clickCountRef.current = clickCountRef.current + 1
+    setTimeout(() => {
+      if (clickCountRef.current === 2) {
+        if (facingMode === 'user') setFacingMode({ exact: 'environment' })
+        else setFacingMode('user')
+      }
+      clickCountRef.current = 0
+    }, 300)
+  }
   const handleSubmitText = async () => {
     const response = await axios.post('/api/liveaudio', {
       data: text,
@@ -88,6 +101,7 @@ export default function Live() {
         audio={false}
         screenshotFormat="image/jpeg"
         videoConstraints={videoConstraints}
+        onClick={handleButtonClick}
       />
     </div>
   )
